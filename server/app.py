@@ -104,23 +104,26 @@ def get_pizzas():
 @app.route("/restaurant_pizzas", methods=['POST'])
 def create_restaurant_pizza():
     try:
-        price = int(request.form.get("price"))
+        data = request.get_json()
+        price = int(data.get("price"))
         if price < 1 or price > 30:
             raise ValueError("Price must be between 1 and 30")
 
         new_restaurant_pizza = RestaurantPizza(
             price=price,
-            pizza_id=request.form.get("pizza_id"),
-            restaurant_id=request.form.get("restaurant_id"),
+            pizza_id=data.get("pizza_id"),
+            restaurant_id=data.get("restaurant_id"),
         )
 
         db.session.add(new_restaurant_pizza)
         db.session.commit()
 
         rp_dict = new_restaurant_pizza.to_dict()
+        rp_dict['pizza_id'] = new_restaurant_pizza.pizza_id
+        rp_dict['restaurant_id'] = new_restaurant_pizza.restaurant_id
 
         response = make_response(
-            rp_dict,
+            jsonify(rp_dict),
             201,
         )
 
@@ -128,6 +131,6 @@ def create_restaurant_pizza():
     except Exception as e:
         error_response = jsonify({"errors": ["validation errors"]})
         return error_response, 400
-        
+
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
